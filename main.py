@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel
 import torch
 from transformers import BertTokenizer, BertForMaskedLM
-from pydantic import BaseModel
 
 app = FastAPI()
 
@@ -9,38 +9,53 @@ app = FastAPI()
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
-class SentenceInput(BaseModel):
-    text: str
+class InputSentence(BaseModel):
+    sentence: str
 
-@app.post("/complete_sentence")
-async def complete_sentence(input_data: SentenceInput):
-    input_text = input_data.text
+def dynamic_masking(input_sentence):
+    words = input_sentence.split()
+    new_words = []
     
-    # Tokenize input
-    input_tokens = tokenizer.tokenize(input_text)
-    input_ids = tokenizer.convert_tokens_to_ids(input_tokens)
+    for i, word in enumerate(words):
+        new_words.append(word)
+        if i < len(words) - 1:
+            new_words.append('[MASK]')
     
-    # Add CLS and SEP tokens
-    input_ids = [tokenizer.cls_token_id] + input_ids + [tokenizer.sep_token_id]
+    return " ".join(new_words)
+
+def fill_masks(sentence):
+    input_ids = tokenizer.encode(sentence, return_tensors='pt')
+    mask_token_indices = torch.where(input_ids == tokenizer.mask_token_id)[1]
     
-    # Add mask token
-    mask_token = tokenizer.mask_token_id
-    input_ids.insert(2, mask_token)  # Insert mask after the first word
-    
-    # Convert to tensor
-    input_ids = torch.tensor([input_ids])
-    
-    # Predict the masked word
     with torch.no_grad():
-        outputs = model(input_ids)
-        predictions = outputs.logits
+        output = model(input_ids)
     
-    # Get the predicted token
-    predicted_index = torch.argmax(predictions[0, 2]).item()
-    predicted_token = tokenizer.convert_ids_to_tokens([predicted_index])
+    logits = output.logits
+    softmax = torch.nn.functional.softmax(logits, dim=-1)
     
-    # Replace the mask with the predicted word
-    input_tokens.insert(2, predicted_token[0])
-    output_text = tokenizer.convert_tokens_to_string(input_tokens)
+    for mask_index in mask_token_indices:
+        mask_word_logits = softmax[0, mask_index, :]
+        top_token_id = torch.topk(mask_word_logits, 1, dim=0).indices[0].item()
+        predicted_token = tokenizer.convert_ids_to_tokens([top_token_id])[0]
+        if predicted_token.startswith("##"):
+            sentence = sentence.replace('[MASK]', predicted_token[2:], 1)
+        else:
+            sentence = sentence.replace('[MASK]', predicted_token, 1)
     
-    return {"completed_sentence": output_text}
+    return sentence
+
+def create_sentence_with_bert(input_sentence):
+    masked_sentence = dynamic_masking(input_sentence)
+    filled_sentence = fill_masks(masked_sentence)
+    sentence = filled_sentence.replace('[CLS]', '').replace('[SEP]', '').strip()
+    sentence = sentence.replace(' ,', ',').replace(' .', '.').replace(' !', '!').replace(' ?', '?')
+    final_sentence = sentence.capitalize()
+    return final_sentence
+
+@app.post("/create_sentence")
+async def create_sentence(input_sentence: InputSentence):
+    try:
+        output_sentence = create_sentence_with_bert(input_sentence.sentence)
+        return {"sentence": output_sentence}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
