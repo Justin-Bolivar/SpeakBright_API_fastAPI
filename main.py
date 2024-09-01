@@ -52,7 +52,7 @@ def create_sentence_with_bert(input_sentence):
     final_sentence = sentence.capitalize()
     return final_sentence
 
-@app.post("/create_sentence")
+@app.post("/complete_sentence")
 async def create_sentence(input_sentence: InputSentence):
     try:
         output_sentence = create_sentence_with_bert(input_sentence.sentence)
