@@ -60,6 +60,6 @@ async def create_sentence(input_text: InputText):
             if sentence.strip():
                 output_sentence = create_sentence_with_bert(sentence.strip())
                 output_sentences.append(output_sentence)
-        return {"completed_text": '. '.join(output_sentences)}
+        return {"completed_sentence": '. '.join(output_sentences)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
