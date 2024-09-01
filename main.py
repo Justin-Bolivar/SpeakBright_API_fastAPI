@@ -5,12 +5,14 @@ from transformers import BertTokenizer, BertForMaskedLM
 
 app = FastAPI()
 
+# Initialize the tokenizer and model
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
 class InputText(BaseModel):
-    text: str
+    text: str  # Input model for receiving the text
 
+# Function for dynamic masking
 def dynamic_masking(input_sentence):
     words = input_sentence.split()
     new_words = []
@@ -22,6 +24,7 @@ def dynamic_masking(input_sentence):
     
     return " ".join(new_words)
 
+# Function for filling in the masked words using the BERT model
 def fill_masks(sentence):
     input_ids = tokenizer.encode(sentence, return_tensors='pt')
     mask_token_indices = torch.where(input_ids == tokenizer.mask_token_id)[1]
@@ -43,6 +46,7 @@ def fill_masks(sentence):
     
     return sentence
 
+# Function to create a coherent sentence using BERT
 def create_sentence_with_bert(input_sentence):
     masked_sentence = dynamic_masking(input_sentence)
     filled_sentence = fill_masks(masked_sentence)
@@ -51,6 +55,7 @@ def create_sentence_with_bert(input_sentence):
     final_sentence = sentence.capitalize()
     return final_sentence
 
+# API endpoint to complete the sentence
 @app.post("/complete_sentence")
 async def create_sentence(input_text: InputText):
     try:
@@ -60,6 +65,7 @@ async def create_sentence(input_text: InputText):
             if sentence.strip():
                 output_sentence = create_sentence_with_bert(sentence.strip())
                 output_sentences.append(output_sentence)
-        return {"completed_sentence": '. '.join(output_sentences)}
+        completed_sentence = '. '.join(output_sentences).strip()
+        return {"completed_sentence": completed_sentence}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
