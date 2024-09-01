@@ -5,12 +5,11 @@ from transformers import BertTokenizer, BertForMaskedLM
 
 app = FastAPI()
 
-# Load pre-trained BERT model and tokenizer
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
-class InputSentence(BaseModel):
-    sentence: str
+class InputText(BaseModel):
+    text: str
 
 def dynamic_masking(input_sentence):
     words = input_sentence.split()
@@ -53,9 +52,14 @@ def create_sentence_with_bert(input_sentence):
     return final_sentence
 
 @app.post("/complete_sentence")
-async def create_sentence(input_sentence: InputSentence):
+async def create_sentence(input_text: InputText):
     try:
-        output_sentence = create_sentence_with_bert(input_sentence.sentence)
-        return {"sentence": output_sentence}
+        sentences = input_text.text.split('.')
+        output_sentences = []
+        for sentence in sentences:
+            if sentence.strip():
+                output_sentence = create_sentence_with_bert(sentence.strip())
+                output_sentences.append(output_sentence)
+        return {"completed_text": '. '.join(output_sentences)}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
