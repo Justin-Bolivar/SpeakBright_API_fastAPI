@@ -1,49 +1,36 @@
 import nltk
 from nltk.util import ngrams
 from collections import Counter
-from nltk import pos_tag
+from datasets import load_dataset
+from nltk.stem import WordNetLemmatizer
 
 nltk.download('punkt_tab')
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger_eng')
 
-# Manual corrections for known words
-manual_corrections = {
-    'eat': 'VB',
-    'draw': 'VB',
-    'run': 'VB',
-    'swim': 'VB',
-    'study': 'VB',
-}
+# Load WikiText-2 dataset from Hugging Face
+dataset = load_dataset('wikitext', 'wikitext-2-v1', split='train')
 
-def load_dataset_and_generate_ngrams():
-    from datasets import load_dataset
+# Extract text from the dataset
+text_data = dataset['text']
 
-    # Load WikiText-2 dataset from Hugging Face
-    dataset = load_dataset('wikitext', 'wikitext-2-v1', split='train')
+# Concatenate all sentences to form a long text
+all_text = ' '.join(text_data)
 
-    # Extract text from the dataset
-    text_data = dataset['text']
+# Tokenize the text using NLTK
+tokens = nltk.word_tokenize(all_text.lower())
 
-    # Concatenate all sentences to form a long text
-    all_text = ' '.join(text_data)
+# Generate bigrams
+bigrams = list(ngrams(tokens, 2))
 
-    # Tokenize the text using NLTK
-    tokens = nltk.word_tokenize(all_text.lower())
+# Count the frequency of each bigram
+bigram_freq = Counter(bigrams)
 
-    # Generate bigrams
-    bigrams = list(ngrams(tokens, 2))
+# Generate trigrams
+trigrams = list(ngrams(tokens, 3))
 
-    # Count the frequency of each bigram
-    bigram_freq = Counter(bigrams)
-
-    # Generate trigrams
-    trigrams = list(ngrams(tokens, 3))
-
-    # Count the frequency of each trigram
-    trigram_freq = Counter(trigrams)
-
-    return bigram_freq, trigram_freq
+# Count the frequency of each trigram
+trigram_freq = Counter(trigrams)
 
 def predict_word_between(word1, word2, trigram_freq, bigram_freq, default_word="am"):
     # Predict from trigram
@@ -79,6 +66,25 @@ def predict_full_sentence(words, trigram_freq, bigram_freq):
         result.append(word2)
     
     return ' '.join(result)
+
+
+    import nltk
+from nltk import pos_tag
+
+# Manual corrections for known words
+manual_corrections = {
+    'eat': 'VB',
+    'draw': 'VB',
+    'run': 'VB',
+    'swim': 'VB',  # Ensure case sensitivity
+    'study': 'VB',
+}
+
+def display_pos_tags(input_words):
+    # Perform POS tagging
+    pos_tagged = pos_tag(input_words)
+    print("POS Tags:", pos_tagged)
+    return pos_tagged
 
 def reorder_words(input_words):
     # Perform POS tagging
@@ -130,3 +136,18 @@ def reorder_words(input_words):
     reordered_sentence = pronoun + adjective + verbs + subject + objects + others
     
     return ' '.join(reordered_sentence)
+
+# Example input words
+input_words = ["happy", "pool", "I", "swim"]
+
+# Call the function
+reordered_sentence = reorder_words(input_words)
+print(f"Original: {input_words}\nReordered: {reordered_sentence}")
+pos_tags = display_pos_tags(input_words)
+
+reordered = reordered_sentence.split()
+print(reordered)
+
+# Predict full sentence by filling in the words between
+sentence = predict_full_sentence(reordered, trigram_freq, bigram_freq)
+print("Predicted Sentence:", sentence)
