@@ -10,7 +10,7 @@ class TextRequest(BaseModel):
 # Load bigram and trigram frequencies when the app starts
 bigram_freq, trigram_freq = load_dataset_and_generate_ngrams()
 
-@app.post("/generate-sentence/")
+@app.post("/complete_sentence/")
 def generate_sentence(request: TextRequest):
     # Tokenize the input text
     input_words = request.text.split()
