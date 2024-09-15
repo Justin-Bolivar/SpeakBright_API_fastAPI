@@ -1,22 +1,28 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from sentence_generation import create_sentence_with_bert
+from utils import predict_full_sentence, reorder_words, load_dataset_and_generate_ngrams
 
 app = FastAPI()
 
-class InputText(BaseModel):
+class TextRequest(BaseModel):
     text: str
 
-@app.post("/complete_sentence")
-async def create_sentence(input_text: InputText):
+# Load bigram and trigram frequencies when the app starts
+bigram_freq, trigram_freq = load_dataset_and_generate_ngrams()
+
+@app.post("/generate-sentence/")
+def generate_sentence(request: TextRequest):
+    # Tokenize the input text
+    input_words = request.text.split()
+    
     try:
-        sentences = input_text.text.split('.')
-        output_sentences = []
-        for sentence in sentences:
-            if sentence.strip():
-                output_sentence = create_sentence_with_bert(sentence.strip())
-                output_sentences.append(output_sentence)
-        completed_sentence = '. '.join(output_sentences).strip()
-        return {"completed_sentence": completed_sentence}
+        # Reorder words using POS tagging
+        reordered_sentence = reorder_words(input_words)
+        reordered = reordered_sentence.split()
+        
+        # Predict full sentence by filling in the words between
+        predicted_sentence = predict_full_sentence(reordered, trigram_freq, bigram_freq)
+        
+        return {"original": request.text, "reordered": reordered_sentence, "predicted_sentence": predicted_sentence}
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(status_code=400, detail=str(e))

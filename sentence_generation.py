@@ -4,7 +4,7 @@ from transformers import BertTokenizer, BertForMaskedLM
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 model = BertForMaskedLM.from_pretrained('bert-base-uncased')
 
-# split input sentence into words and add [MASK] token inbetween words
+# split input sentence into words and add [MASK] token in between words
 def dynamic_masking(input_sentence):
     words = input_sentence.split()
     new_words = []
@@ -39,7 +39,7 @@ def fill_masks(sentence):
     return sentence
 
 # remove [CLS] and [SEP] tokens, Capitalize the first letter of the sentence and
-# remove extra spaces after punctuation
+# remove extra spaces before punctuation
 def create_sentence_with_bert(input_sentence):
     masked_sentence = dynamic_masking(input_sentence)
     filled_sentence = fill_masks(masked_sentence)
