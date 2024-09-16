@@ -58,7 +58,7 @@ manual_corrections = {
 def load_dataset_and_generate_ngrams():
     from datasets import load_dataset
 
-    # Load only a subset of the WikiText-2 dataset (e.g., 10%)
+    # Load only a subset of the WikiText-2 dataset
     dataset = load_dataset('wikitext', 'wikitext-2-v1', split='train')
 
     # Extract text from the dataset
@@ -90,9 +90,9 @@ def predict_word_between(word1, word2, trigram_freq, bigram_freq, default_word="
     
     if candidates:
         best_trigram = max(candidates, key=lambda trigram: trigram_freq[trigram])
-        return best_trigram[1] 
+        return best_trigram[1]
     
-    # if not found go to bigram
+    # if not found, go to bigram
     candidates = [bigram for bigram in bigram_freq if bigram[0] == word1]
     
     if candidates:

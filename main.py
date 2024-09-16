@@ -14,7 +14,7 @@ trigram_freq = None
 
 def load_ngrams_on_demand():
     global bigram_freq, trigram_freq
-    if not bigram_freq or not trigram_freq:
+    if bigram_freq is None or trigram_freq is None:
         bigram_freq, trigram_freq = load_dataset_and_generate_ngrams()
 
 @app.post("/complete_sentence/")
@@ -34,8 +34,10 @@ def generate_sentence(request: TextRequest):
         predicted_sentence = predict_full_sentence(reordered, trigram_freq, bigram_freq)
 
         return {"original": request.text, "reordered": reordered_sentence, "predicted_sentence": predicted_sentence}
-    except Exception as e:
+    except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
 if __name__ == "__main__":
     uvicorn.run(app, host="192.168.1.21", port=8080)
