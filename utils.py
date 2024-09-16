@@ -10,10 +10,49 @@ nltk.download('averaged_perceptron_tagger_eng')
 # Manual corrections for known words
 manual_corrections = {
     'eat': 'VB',
-    'draw': 'VB',
-    'run': 'VB',
+    'drawing': 'VB',
+    'running': 'VB',
     'swim': 'VB',
-    'study': 'VB',
+    'studying': 'VB',
+    'nori': 'NN',
+    'pool': 'NN',
+    'inosuke': 'NN',
+    'happy': 'JJ',
+    'sad': 'JJ',
+    'jollibee': 'NN',
+    'mcdonalds': 'NN',
+    'white ink': 'NN',
+    'angry': 'JJ',
+    'jiraiya ': 'NN',
+    'hospital': 'NN',
+    'inosuke': 'NN',
+    'halo-halo': 'NN',
+    'school': 'NN',
+    'ice cream': 'NN',
+    'bored': 'JJ',
+    'dinosaur toy': 'NN',
+    'burger': 'NN',
+    'pizza': 'NN',
+    'chicken': 'NN',
+    'home': 'NN',
+    'ballpen': 'NN',
+    'nauseated': 'JJ',
+    'penguin': 'NN',
+    'sleepy': 'JJ',
+    'aquarium': 'NN',
+    'notebook': 'NN',
+    'crayons': 'NN',
+    'sticky notes': 'NN',
+    'anxious': 'JJ',
+    'pochita': 'NN',
+    'pencil': 'NN',
+    'cake': 'NN',
+    'park': 'NN',
+    'apple': 'NN',
+    'ampaman': 'NN',
+    'dizzy': 'JJ',
+    'keyboard': 'NN',
+    'laughter': 'NN',
 }
 
 def load_dataset_and_generate_ngrams():
@@ -111,9 +150,6 @@ def reorder_words(input_words):
         elif tag.startswith('VB'):  # Verbs
             verbs.append(word)
             has_verb = True
-        elif tag.startswith('NN') or tag.startswith('NNS'):  # Object nouns
-            objects.append(word)
-            has_noun = True
         else:
             others.append(word)
     

@@ -1,6 +1,7 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 from utils import predict_full_sentence, reorder_words, load_dataset_and_generate_ngrams
+import uvicorn
 
 app = FastAPI()
 
@@ -26,3 +27,6 @@ def generate_sentence(request: TextRequest):
         return {"original": request.text, "reordered": reordered_sentence, "predicted_sentence": predicted_sentence}
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+#if __name__ == "__main__":
+    #uvicorn.run(app, host="192.168.1.21", port=8080)
