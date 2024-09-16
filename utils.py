@@ -4,6 +4,7 @@ from collections import Counter
 from nltk import pos_tag
 
 nltk.download('punkt')
+nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger')
 
 # Manual corrections for known words
