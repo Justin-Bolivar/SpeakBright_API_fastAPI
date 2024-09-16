@@ -3,9 +3,8 @@ from nltk.util import ngrams
 from collections import Counter
 from nltk import pos_tag
 
-nltk.download('punkt_tab')
 nltk.download('punkt')
-nltk.download('averaged_perceptron_tagger_eng')
+nltk.download('averaged_perceptron_tagger')
 
 # Manual corrections for known words
 manual_corrections = {
@@ -58,7 +57,7 @@ manual_corrections = {
 def load_dataset_and_generate_ngrams():
     from datasets import load_dataset
 
-    # Load WikiText-2 dataset from Hugging Face
+    # Load only a subset of the WikiText-2 dataset (e.g., 10%)
     dataset = load_dataset('wikitext', 'wikitext-2-v1', split='train')
 
     # Extract text from the dataset
