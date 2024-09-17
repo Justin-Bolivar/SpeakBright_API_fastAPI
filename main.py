@@ -1,6 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
-from utils import predict_full_sentence, reorder_words, load_dataset_and_generate_ngrams
+from utils import predict_full_sentence, reorder_words, load_ngrams_from_file
 import uvicorn
 
 app = FastAPI()
@@ -15,11 +15,15 @@ trigram_freq = None
 def load_ngrams_on_demand():
     global bigram_freq, trigram_freq
     if bigram_freq is None or trigram_freq is None:
-        bigram_freq, trigram_freq = load_dataset_and_generate_ngrams()
+        bigram_freq, trigram_freq = load_ngrams_from_file()
+
+@app.on_event("startup")
+async def startup_event():
+    load_ngrams_on_demand()
 
 @app.post("/complete_sentence/")
 def generate_sentence(request: TextRequest):
-    # Lazy load the bigram and trigram frequencies
+    # Ensure n-grams are loaded
     load_ngrams_on_demand()
 
     # Tokenize the input text
@@ -40,4 +44,4 @@ def generate_sentence(request: TextRequest):
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="192.168.1.21", port=8080)
+    uvicorn.run(app, host="172.30.10.3", port=8080)

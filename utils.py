@@ -1,7 +1,6 @@
 import nltk
-from nltk.util import ngrams
-from collections import Counter
 from nltk import pos_tag
+import json
 
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger')
@@ -54,33 +53,17 @@ manual_corrections = {
     'laughter': 'NN',
 }
 
-def load_dataset_and_generate_ngrams():
-    from datasets import load_dataset
-
-    # Load only a subset of the WikiText-2 dataset
-    dataset = load_dataset('wikitext', 'wikitext-2-v1', split='train')
-
-    # Extract text from the dataset
-    text_data = dataset['text']
-
-    # Concatenate all sentences to form a long text
-    all_text = ' '.join(text_data)
-
-    # Tokenize the text using NLTK
-    tokens = nltk.word_tokenize(all_text.lower())
-
-    # Generate bigrams
-    bigrams = list(ngrams(tokens, 2))
-
-    # Count the frequency of each bigram
-    bigram_freq = Counter(bigrams)
-
-    # Generate trigrams
-    trigrams = list(ngrams(tokens, 3))
-
-    # Count the frequency of each trigram
-    trigram_freq = Counter(trigrams)
-
+def load_ngrams_from_file():
+    with open('bigram_freq.json', 'r') as f:
+        bigram_freq = json.load(f)
+    
+    with open('trigram_freq.json', 'r') as f:
+        trigram_freq = json.load(f)
+    
+    # Convert keys back to tuples
+    bigram_freq = {tuple(k.split()): v for k, v in bigram_freq.items()}
+    trigram_freq = {tuple(k.split()): v for k, v in trigram_freq.items()}
+    
     return bigram_freq, trigram_freq
 
 def predict_word_between(word1, word2, trigram_freq, bigram_freq, default_word="am"):
