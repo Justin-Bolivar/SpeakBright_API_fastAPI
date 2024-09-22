@@ -1,6 +1,7 @@
 import nltk
 from nltk import pos_tag
 import json
+import functools
 
 nltk.download('punkt_tab')
 nltk.download('averaged_perceptron_tagger')
@@ -53,14 +54,14 @@ manual_corrections = {
     'laughter': 'NN',
 }
 
+@functools.lru_cache(maxsize=1)
 def load_ngrams_from_file():
     with open('bigram_freq.json', 'r') as f:
         bigram_freq = json.load(f)
     
     with open('trigram_freq.json', 'r') as f:
         trigram_freq = json.load(f)
-    
-    # Convert keys back to tuples
+
     bigram_freq = {tuple(k.split()): v for k, v in bigram_freq.items()}
     trigram_freq = {tuple(k.split()): v for k, v in trigram_freq.items()}
     
