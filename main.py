@@ -18,7 +18,6 @@ app.add_middleware(
 class TextRequest(BaseModel):
     text: str
 
-# Global variables for caching
 bigram_freq = None
 trigram_freq = None
 
@@ -32,28 +31,20 @@ async def startup_event():
     load_ngrams_on_demand()
 
 def process_text(text):
-    # First, lowercase everything
     text = text.lower()
-    
-    # Define a regex pattern to match 'i' as a word (surrounded by spaces or at the start/end of the string)
     pattern = r'\bi\b'
-    
-    # Use a lambda function to capitalize 'i' only when it's a word by itself
     return re.sub(pattern, lambda m: 'I', text)
 
 @app.post("/complete_sentence")
 def generate_sentence(request: TextRequest):
     load_ngrams_on_demand()
 
-    # Process the input text
     processed_input = process_text(request.text)
 
     try:
-        # Reorder words using POS tagging
         reordered_sentence = reorder_words(processed_input.split())
         reordered = reordered_sentence.split()
 
-        # Predict full sentence by filling in the words between
         predicted_sentence = predict_full_sentence(reordered, trigram_freq, bigram_freq)
 
         return {
