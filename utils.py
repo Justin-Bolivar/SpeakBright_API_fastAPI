@@ -24,7 +24,6 @@ manual_corrections = {
     'angry': 'JJ',
     'jiraiya ': 'NN',
     'hospital': 'NN',
-    'inosuke': 'NN',
     'halo-halo': 'NN',
     'school': 'NN',
     'ice cream': 'NN',

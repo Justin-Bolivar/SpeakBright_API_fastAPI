@@ -1,9 +1,19 @@
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from utils import predict_full_sentence, reorder_words, load_ngrams_from_file
 import uvicorn
+import re
 
 app = FastAPI()
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 class TextRequest(BaseModel):
     text: str
@@ -21,27 +31,41 @@ def load_ngrams_on_demand():
 async def startup_event():
     load_ngrams_on_demand()
 
-@app.post("/complete_sentence/")
+def process_text(text):
+    # First, lowercase everything
+    text = text.lower()
+    
+    # Define a regex pattern to match 'i' as a word (surrounded by spaces or at the start/end of the string)
+    pattern = r'\bi\b'
+    
+    # Use a lambda function to capitalize 'i' only when it's a word by itself
+    return re.sub(pattern, lambda m: 'I', text)
+
+@app.post("/complete_sentence")
 def generate_sentence(request: TextRequest):
-    # Ensure n-grams are loaded
     load_ngrams_on_demand()
 
-    # Tokenize the input text
-    input_words = request.text.split()
+    # Process the input text
+    processed_input = process_text(request.text)
 
     try:
         # Reorder words using POS tagging
-        reordered_sentence = reorder_words(input_words)
+        reordered_sentence = reorder_words(processed_input.split())
         reordered = reordered_sentence.split()
 
         # Predict full sentence by filling in the words between
         predicted_sentence = predict_full_sentence(reordered, trigram_freq, bigram_freq)
 
-        return {"original": request.text, "reordered": reordered_sentence, "predicted_sentence": predicted_sentence}
+        return {
+            "original": request.text,
+            "processed": processed_input,
+            "reordered": reordered_sentence,
+            "sentence": predicted_sentence
+        }
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail="Internal server error: " + str(e))
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="172.30.10.3", port=8080)
+    uvicorn.run(app, host="192.168.1.21", port=5724)
