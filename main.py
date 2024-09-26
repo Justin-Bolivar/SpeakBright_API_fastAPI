@@ -1,3 +1,4 @@
+import subprocess
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 import spacy
@@ -5,7 +6,13 @@ import uvicorn
 
 app = FastAPI()
 
-nlp = spacy.load("en_core_web_sm")
+try:
+    nlp = spacy.load("en_core_web_sm")
+except OSError:
+    # If the model is not found, download it
+    print("Downloading the 'en_core_web_sm' model...")
+    subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
+    nlp = spacy.load("en_core_web_sm")
 
 class TextInput(BaseModel):
     text: str
