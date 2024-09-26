@@ -51,6 +51,8 @@ manual_corrections = {
     'dizzy': 'JJ',
     'keyboard': 'NN',
     'laughter': 'NN',
+    'sumo': 'NN',
+    'hungry': 'JJ',
 }
 
 @functools.lru_cache(maxsize=1)
