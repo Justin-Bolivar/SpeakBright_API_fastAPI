@@ -1,7 +1,5 @@
 fastapi
 uvicorn
-torch
-transformers
 nltk
 spacy
 pydantic
