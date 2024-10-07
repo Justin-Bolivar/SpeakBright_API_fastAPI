@@ -33,63 +33,48 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
+def arrange_words_by_order(doc):
+    pronoun = None
+    adjective = None
+    verb = None
+    noun = None
+
+    # Iterate over tokens and classify them based on their POS tags
+    for token in doc:
+        if token.pos_ == "PRON" and pronoun is None:
+            pronoun = token.text
+        elif token.pos_ == "ADJ" and adjective is None:
+            adjective = token.text
+        elif token.pos_ == "VERB" and verb is None:
+            verb = token.text
+        elif token.pos_ == "NOUN" and noun is None:
+            noun = token.text
+
+    # Create a list of the words in the correct order
+    ordered_sentence = []
+    if pronoun:
+        ordered_sentence.append(pronoun)
+    if adjective:
+        ordered_sentence.append(adjective)
+    if verb:
+        ordered_sentence.append(verb)
+    if noun:
+        ordered_sentence.append(noun)
+
+    return ' '.join(ordered_sentence).strip()
+
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
-    
     doc = nlp(rough_sentence)
     
-    subject = ""
-    verb = ""
-    obj = ""
-    adjective = ""
-    aux_verb = ""
-    named_entities = []
+    # Arrange words in "Pronoun + Adjective + Verb + Noun" order
+    ordered_sentence = arrange_words_by_order(doc)
     
-    has_noun = False
-    has_verb = False
-
-    for token in doc:
-        if token.dep_ == 'nsubj':
-            subject = token.text
-            has_noun = True
-        elif token.pos_ == 'VERB':
-            verb = token.text
-            has_verb = True
-        elif token.dep_ == 'dobj':
-            obj = token.text
-            has_noun = True 
-        elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod':  # Adjective
-            adjective = token.text
-        elif token.ent_type_:
-            named_entities.append(token.text)
-            has_noun = True
-
-    if not has_noun:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a noun.")
-    if not has_verb:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a verb.")
+    if not ordered_sentence:
+        raise HTTPException(status_code=400, detail="Error: Could not form a valid sentence.")
     
-    if subject.lower() == "i":
-        aux_verb = "am"
-    elif subject.lower() in ["he", "she", "it"]:
-        aux_verb = "is"
-    elif subject.lower() in ["you", "we", "they"]:
-        aux_verb = "are"
-    
-    sentence = ""
-    
-    if adjective and aux_verb:
-        sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
-    
-    if verb:
-        if sentence:
-            sentence += f", {subject.capitalize()} want to {verb}"
-        else:
-            sentence = f"{subject.capitalize()} {verb}"
-        if obj:
-            sentence += f" {obj}"
-
-    sentence = sentence.strip()
+    # Final sentence formation, adding a period at the end if necessary
+    sentence = ordered_sentence
     if sentence and not sentence.endswith('.'):
         sentence += '.'
 
@@ -111,6 +96,7 @@ def generate_sentence_endpoint(text_input: TextInput):
         "ner_tags": ner_tags,
         "dependency": dependencies
     }
+
 
 #if __name__ == "__main__":
    #uvicorn.run("main:app", host="192.168.1.21", port=5724)
