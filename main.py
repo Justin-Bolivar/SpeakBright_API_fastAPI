@@ -47,7 +47,7 @@ def arrange_words_by_order(doc):
             adjective = token.text
         elif token.pos_ == "VERB" and verb is None:
             verb = token.text
-        elif token.pos_ == "NOUN" and noun is None:
+        elif token.pos_ == "NOUN" or token.pos_ == 'PROPN' and noun is None:
             noun = token.text
 
     # Create a list of the words in the correct order
