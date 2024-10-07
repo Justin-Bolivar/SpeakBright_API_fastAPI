@@ -82,7 +82,7 @@ def generate_sentence(input_words):
 
     # Process POS and dependencies as in the original logic
     for token in doc:
-        if token.dep_ == 'nsubj':
+        if token.dep_ == 'nsubj' or token.dep_ == 'compound':
             subject = token.text
             has_noun = True
         elif token.pos_ == 'VERB':
@@ -103,7 +103,7 @@ def generate_sentence(input_words):
         raise HTTPException(status_code=400, detail="Error: The sentence is missing a verb.")
 
     # Determine auxiliary verb based on the subject
-    if subject.lower() == "i":
+    if subject.lower() == "I":
         aux_verb = "am"
     elif subject.lower() in ["he", "she", "it"]:
         aux_verb = "is"
