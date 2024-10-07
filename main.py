@@ -88,7 +88,7 @@ def generate_sentence(input_words):
         elif token.pos_ == 'VERB':
             verb = token.text
             has_verb = True
-        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN':
+        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN' :
             obj = token.text
             has_noun = True 
         elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod':  # Adjective
