@@ -26,8 +26,6 @@ try:
 except OSError:
     # If the model is not found, download it
     print("Downloading the 'en_core_web_sm' model...")
-    print("Downloading wordnet")
-    subprocess.run(["python", "-m", "nltk", "download", "wordnet"])
     subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
     nlp = spacy.load("en_core_web_sm")
 
@@ -85,9 +83,6 @@ def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
     doc = nlp(rough_sentence)
 
-    # Arrange words in "Pronoun + Adjective + Verb + Noun" order
-    ordered_sentence = arrange_words_by_order(doc)
-    
     # Extract tokens from the doc for further processing
     subject = ""
     verb = ""
@@ -116,6 +111,7 @@ def generate_sentence(input_words):
             named_entities.append(token.text)
             has_noun = True
 
+    # If no verb is found, use WordNet to find a suitable verb for the noun
     if not has_verb and has_noun:
         verb = find_suitable_verb(obj if obj else subject)
         if verb:
@@ -130,8 +126,8 @@ def generate_sentence(input_words):
         aux_verb = "are"
 
     # Final sentence formation, combining ordered words and other logic
-    sentence = ordered_sentence  # Start with the ordered sentence
-    
+    sentence = ""
+
     # If the sentence has a subject and auxiliary verb with an adjective
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
