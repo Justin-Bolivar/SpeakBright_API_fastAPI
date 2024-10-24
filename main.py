@@ -4,8 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 import uvicorn
-import nltk
-from nltk.corpus import wordnet
+import verbnet  # Added for using VerbNet
 
 app = FastAPI()
 
@@ -17,8 +16,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
-nltk.download('wordnet')
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -37,25 +34,16 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
-def find_suitable_verb(noun):
-    synsets = wordnet.synsets(noun, pos=wordnet.NOUN)
-    if synsets:
-        for synset in synsets:
-            for lemma in synset.lemmas():
-                related_forms = lemma.derivationally_related_forms()
-                for form in related_forms:
-                    # Check for derivational forms or synonyms that are verbs
-                    if form.synset().pos() == 'v':  # Verb POS check
-                        return form.name()
-                # Look for hypernyms or other related verbs
-                hypernyms = synset.hypernyms()
-                if hypernyms:
-                    for hypernym in hypernyms:
-                        for lemma in hypernym.lemmas():
-                            if lemma.synset().pos() == 'v':
-                                return lemma.name()
+def find_suitable_verb_verbnet(noun):
+    # Access verb classes related to the noun
+    verb_classes = verbnet.classids(lemma=noun)
+    if verb_classes:
+        # Get the verbs associated with those classes
+        verbs = []
+        for v_class in verb_classes:
+            verbs.extend(verbnet.members(v_class))
+        return verbs[0] if verbs else None
     return None
-
 
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
@@ -91,9 +79,9 @@ def generate_sentence(input_words):
     # Attempt to find a suitable verb if not already present
     if not has_verb and has_noun:
         if adjective:
-            verb = find_suitable_verb(adjective)
+            verb = find_suitable_verb_verbnet(adjective)
         if not verb and obj:
-            verb = find_suitable_verb(obj)
+            verb = find_suitable_verb_verbnet(obj)
 
     # Auxiliary verb determination
     if subject.lower() == "i":
@@ -116,7 +104,6 @@ def generate_sentence(input_words):
 
     return sentence
 
-
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
     input_words = text_input.text.split()
@@ -134,5 +121,5 @@ def generate_sentence_endpoint(text_input: TextInput):
         "dependency": dependencies
     }
 
-#if __name__ == "__main__":
-    #uvicorn.run("main:app", host="192.168.1.21", port=5724)
+# if __name__ == "__main__":
+#     uvicorn.run("main:app", host="192.168.1.21", port=5724)
