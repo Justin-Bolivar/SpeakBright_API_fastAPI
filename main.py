@@ -4,7 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 import uvicorn
-import verbnet  # Added for using VerbNet
+import nltk
+from nltk.corpus import wordnet
 
 app = FastAPI()
 
@@ -16,6 +17,8 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
+
+nltk.download('wordnet')
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -34,15 +37,13 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
-def find_suitable_verb_verbnet(noun):
-    # Access verb classes related to the noun
-    verb_classes = verbnet.classids(lemma=noun)
-    if verb_classes:
-        # Get the verbs associated with those classes
-        verbs = []
-        for v_class in verb_classes:
-            verbs.extend(verbnet.members(v_class))
-        return verbs[0] if verbs else None
+def find_suitable_verb(noun):
+    token = nlp(noun)
+    for word in token:
+        for lex in word.vocab:
+            if lex.is_alpha and lex.is_lower and lex.orth_ != noun and word.has_vector:
+                if lex.orth_ in word.text and lex.tag_ == 'VB':
+                    return lex.orth_
     return None
 
 def generate_sentence(input_words):
@@ -79,9 +80,9 @@ def generate_sentence(input_words):
     # Attempt to find a suitable verb if not already present
     if not has_verb and has_noun:
         if adjective:
-            verb = find_suitable_verb_verbnet(adjective)
+            verb = find_suitable_verb(adjective)
         if not verb and obj:
-            verb = find_suitable_verb_verbnet(obj)
+            verb = find_suitable_verb(obj)
 
     # Auxiliary verb determination
     if subject.lower() == "i":
@@ -104,6 +105,7 @@ def generate_sentence(input_words):
 
     return sentence
 
+
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
     input_words = text_input.text.split()
@@ -121,5 +123,5 @@ def generate_sentence_endpoint(text_input: TextInput):
         "dependency": dependencies
     }
 
-# if __name__ == "__main__":
-#     uvicorn.run("main:app", host="192.168.1.21", port=5724)
+#if __name__ == "__main__":
+    #uvicorn.run("main:app", host="192.168.1.21", port=5724)
