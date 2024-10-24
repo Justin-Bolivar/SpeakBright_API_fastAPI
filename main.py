@@ -4,9 +4,6 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 import uvicorn
-import nltk
-from nltk.corpus import wordnet
-from transformers import pipeline
 
 app = FastAPI()
 
@@ -18,9 +15,6 @@ app.add_middleware(
     allow_methods=["*"],  # Allows all methods
     allow_headers=["*"],  # Allows all headers
 )
-
-nltk.download('wordnet')
-fill_mask = pipeline("fill-mask", model="bert-base-uncased")
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -39,15 +33,30 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
-def find_suitable_verb_bert(noun):
-    # Template sentence with a mask for the verb position
-    sentence = f"I want to [MASK] the {noun}."
-    predictions = fill_mask(sentence)
-    # Extract the most probable verb from the predictions
-    for pred in predictions:
-        if pred['token_str'].isalpha():  # Ensure it is a valid word
-            return pred['token_str']
-    return None
+# Dictionary for common verbs associated with certain adjectives or nouns
+verb_dict = {
+    "hungry": "eat",
+    "thirsty": "drink",
+    "tired": "sleep",
+    "happy": "smile",
+    "food": "eat",
+    "water": "drink",
+    "bed": "sleep",
+    "pool": "swim",
+    "Ice Cream": "eat",
+    "Eggnog": "eat",
+    "Sumo": "eat",
+    "Halo-Halo": "eat",
+    "Dinosaur Toy": "play",
+    "Burger": "eat",
+    "Chicken": "eat",
+    "Rubiks Cube": "play",
+    "Pizza": "eat",
+}
+
+def find_suitable_verb(word):
+    # Use the dictionary to find a suitable verb
+    return verb_dict.get(word.lower(), None)
 
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
@@ -83,9 +92,9 @@ def generate_sentence(input_words):
     # Attempt to find a suitable verb if not already present
     if not has_verb and has_noun:
         if adjective:
-            verb = find_suitable_verb_bert(adjective)
+            verb = find_suitable_verb(adjective)
         if not verb and obj:
-            verb = find_suitable_verb_bert(obj)
+            verb = find_suitable_verb(obj)
 
     # Auxiliary verb determination
     if subject.lower() == "i":
