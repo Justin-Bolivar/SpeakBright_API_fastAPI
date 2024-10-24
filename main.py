@@ -19,6 +19,8 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+nltk.download('wordnet')
+
 try:
     nlp = spacy.load("en_core_web_sm")
 except OSError:
