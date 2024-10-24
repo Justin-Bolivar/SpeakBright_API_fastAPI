@@ -52,6 +52,7 @@ verb_dict = {
     "Chicken": "eat",
     "Rubiks Cube": "play",
     "Pizza": "eat",
+    "Oreo": "eat",
 }
 
 def find_suitable_verb(word):
@@ -91,10 +92,10 @@ def generate_sentence(input_words):
 
     # Attempt to find a suitable verb if not already present
     if not has_verb and has_noun:
-        if adjective:
-            verb = find_suitable_verb(adjective)
-        if not verb and obj:
+        if obj:
             verb = find_suitable_verb(obj)
+        if not verb and adjective:
+            verb = find_suitable_verb(adjective)
 
     # Auxiliary verb determination
     if subject.lower() == "i":
