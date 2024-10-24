@@ -107,7 +107,7 @@ def generate_sentence(input_words):
         elif token.pos_ == 'VERB':
             verb = token.text
             has_verb = True
-        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN' :
+        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN':
             obj = token.text
             has_noun = True 
         elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod':  # Adjective
@@ -149,6 +149,10 @@ def generate_sentence(input_words):
     sentence = sentence.strip()
     if sentence and not sentence.endswith('.'):
         sentence += '.'
+
+    # Append additional sentence if object exists and verb is found
+    if obj and verb:
+        sentence += f" I want to {verb} {obj}."
 
     return sentence
 
