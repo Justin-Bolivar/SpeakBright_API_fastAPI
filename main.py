@@ -33,7 +33,36 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
-# Dictionary for common verbs associated with certain adjectives or nouns
+def arrange_words_by_order(doc):
+    pronoun = None
+    adjective = None
+    verb = None
+    noun = None
+
+    # Iterate over tokens and classify them based on their POS tags
+    for token in doc:
+        if token.pos_ == "PRON" and pronoun is None:
+            pronoun = token.text
+        elif token.pos_ == "ADJ" and adjective is None:
+            adjective = token.text
+        elif token.pos_ == "VERB" and verb is None:
+            verb = token.text
+        elif token.pos_ == "NOUN" and noun is None:
+            noun = token.text
+
+    # Create a list of the words in the correct order
+    ordered_sentence = []
+    if pronoun:
+        ordered_sentence.append(pronoun)
+    if adjective:
+        ordered_sentence.append(adjective)
+    if verb:
+        ordered_sentence.append(verb)
+    if noun:
+        ordered_sentence.append(noun)
+
+    return ' '.join(ordered_sentence).strip()
+
 verb_dict = {
     "hungry": "eat",
     "thirsty": "drink",
@@ -55,25 +84,25 @@ verb_dict = {
     "Oreo": "eat",
 }
 
-def find_suitable_verb(word):
-    # Use the dictionary to find a suitable verb
-    return verb_dict.get(word.lower(), None)
-
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
     doc = nlp(rough_sentence)
 
-    # Initialize variables
+    # Arrange words in "Pronoun + Adjective + Verb + Noun" order
+    ordered_sentence = arrange_words_by_order(doc)
+    
+    # Extract tokens from the doc for further processing
     subject = ""
     verb = ""
     obj = ""
     adjective = ""
     aux_verb = ""
     named_entities = []
+
     has_noun = False
     has_verb = False
 
-    # Extract details using POS and dependency parsing
+    # Process POS and dependencies as in the original logic
     for token in doc:
         if token.pos_ == 'PRON':
             subject = token.text
@@ -81,23 +110,19 @@ def generate_sentence(input_words):
         elif token.pos_ == 'VERB':
             verb = token.text
             has_verb = True
-        elif token.dep_ in ['dobj', 'attr', 'nsubj'] and token.pos_ in ['NOUN', 'PROPN']:
+        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN' :
             obj = token.text
-            has_noun = True
-        elif token.dep_ in ['acomp', 'amod'] or token.pos_ ['ADJ']:  # Adjective
+            has_noun = True 
+        elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod':  # Adjective
             adjective = token.text
         elif token.ent_type_:
             named_entities.append(token.text)
             has_noun = True
 
-    # Attempt to find a suitable verb if not already present
-    if not has_verb and has_noun:
-        if obj:
-            verb = find_suitable_verb(obj)
-        if not verb and adjective:
-            verb = find_suitable_verb(adjective)
-
-    # Auxiliary verb determination
+    if not has_noun:
+        raise HTTPException(status_code=400, detail="Error: The sentence is missing a noun.")
+    
+    # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
         aux_verb = "am"
     elif subject.lower() in ["he", "she", "it"]:
@@ -105,18 +130,38 @@ def generate_sentence(input_words):
     elif subject.lower() in ["you", "we", "they"]:
         aux_verb = "are"
 
-    # Constructing the sentence
-    sentence = f"{subject.capitalize()} {aux_verb} {adjective}".strip()
+    # If verb is missing and noun exists, find a suitable verb from the dictionary
+    if not has_verb and has_noun:
+        if obj.lower() in verb_dict:
+            verb = verb_dict[obj.lower()]
+        elif adjective.lower() in verb_dict:
+            verb = verb_dict[adjective.lower()]
+        else:
+            raise HTTPException(status_code=400, detail="Error: Suitable verb not found for the noun.")
 
-    # Add verbs and objects if needed
-    if verb and obj:
-        sentence += f", {subject.capitalize()} want to {verb} {obj}."
+    # Final sentence formation, combining ordered words and other logic
+    sentence = ordered_sentence  # Start with the ordered sentence
+    
+    # If the sentence has a subject and auxiliary verb with an adjective
+    if adjective and aux_verb and subject:
+        sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
+    
+    # Add the verb and object
+    if verb:
+        if sentence:
+            sentence += f", {subject.capitalize()} want to {verb}"
+        else:
+            sentence = f"{subject.capitalize()} {verb}"
+        if obj:
+            sentence += f" {obj}"
 
-    # Sentence finalization
-    if not sentence.endswith('.'):
+    # Ensure proper sentence ending
+    sentence = sentence.strip()
+    if sentence and not sentence.endswith('.'):
         sentence += '.'
 
     return sentence
+
 
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
@@ -136,4 +181,4 @@ def generate_sentence_endpoint(text_input: TextInput):
     }
 
 #if __name__ == "__main__":
-    #uvicorn.run("main:app", host="192.168.1.21", port=5724)
+   #uvicorn.run("main:app", host="192.168.1.21", port=5724)
