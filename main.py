@@ -84,7 +84,7 @@ def generate_sentence(input_words):
         elif token.dep_ in ['dobj', 'attr', 'nsubj'] and token.pos_ in ['NOUN', 'PROPN']:
             obj = token.text
             has_noun = True
-        elif token.dep_ in ['acomp', 'amod']:  # Adjective
+        elif token.dep_ in ['acomp', 'amod'] or token.pos_ ['ADJ']:  # Adjective
             adjective = token.text
         elif token.ent_type_:
             named_entities.append(token.text)
