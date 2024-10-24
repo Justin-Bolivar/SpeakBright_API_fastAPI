@@ -6,6 +6,7 @@ import spacy
 import uvicorn
 import nltk
 from nltk.corpus import wordnet
+from transformers import pipeline
 
 app = FastAPI()
 
@@ -19,6 +20,7 @@ app.add_middleware(
 )
 
 nltk.download('wordnet')
+fill_mask = pipeline("fill-mask", model="bert-base-uncased")
 
 try:
     nlp = spacy.load("en_core_web_sm")
@@ -37,13 +39,14 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
-def find_suitable_verb(noun):
-    token = nlp(noun)
-    for word in token:
-        for lex in word.vocab:
-            if lex.is_alpha and lex.is_lower and lex.orth_ != noun and word.has_vector:
-                if lex.orth_ in word.text and lex.tag_ == 'VB':
-                    return lex.orth_
+def find_suitable_verb_bert(noun):
+    # Template sentence with a mask for the verb position
+    sentence = f"I want to [MASK] the {noun}."
+    predictions = fill_mask(sentence)
+    # Extract the most probable verb from the predictions
+    for pred in predictions:
+        if pred['token_str'].isalpha():  # Ensure it is a valid word
+            return pred['token_str']
     return None
 
 def generate_sentence(input_words):
@@ -80,9 +83,9 @@ def generate_sentence(input_words):
     # Attempt to find a suitable verb if not already present
     if not has_verb and has_noun:
         if adjective:
-            verb = find_suitable_verb(adjective)
+            verb = find_suitable_verb_bert(adjective)
         if not verb and obj:
-            verb = find_suitable_verb(obj)
+            verb = find_suitable_verb_bert(obj)
 
     # Auxiliary verb determination
     if subject.lower() == "i":
@@ -104,7 +107,6 @@ def generate_sentence(input_words):
         sentence += '.'
 
     return sentence
-
 
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
