@@ -7,7 +7,6 @@ import uvicorn
 import nltk
 from nltk.corpus import wordnet
 
-
 app = FastAPI()
 
 # Add CORS middleware
