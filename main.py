@@ -4,6 +4,9 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 import spacy
 import uvicorn
+import nltk
+from nltk.corpus import wordnet
+
 
 app = FastAPI()
 
@@ -21,6 +24,8 @@ try:
 except OSError:
     # If the model is not found, download it
     print("Downloading the 'en_core_web_sm' model...")
+    print("Downloading wordnet")
+    subprocess.run(["python", "-m", "nltk", "download", "wordnet"])
     subprocess.run(["python", "-m", "spacy", "download", "en_core_web_sm"])
     nlp = spacy.load("en_core_web_sm")
 
@@ -32,6 +37,7 @@ class TextOutput(BaseModel):
     pos_tags: list
     ner_tags: list
     dependency: list
+
 def arrange_words_by_order(doc):
     pronoun = None
     adjective = None
@@ -61,6 +67,17 @@ def arrange_words_by_order(doc):
         ordered_sentence.append(noun)
 
     return ' '.join(ordered_sentence).strip()
+
+def find_suitable_verb(noun):
+    synsets = wordnet.synsets(noun, pos=wordnet.NOUN)
+    if synsets:
+        for synset in synsets:
+            for lemma in synset.lemmas():
+                related_forms = lemma.derivationally_related_forms()
+                for form in related_forms:
+                    if form.synset().pos() == 'v':  # Check if it's a verb
+                        return form.name()
+    return None
 
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
@@ -97,10 +114,10 @@ def generate_sentence(input_words):
             named_entities.append(token.text)
             has_noun = True
 
-    if not has_noun:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a noun.")
-    if not has_verb:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a verb.")
+    if not has_verb and has_noun:
+        verb = find_suitable_verb(obj if obj else subject)
+        if verb:
+            has_verb = True
 
     # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
@@ -132,7 +149,6 @@ def generate_sentence(input_words):
         sentence += '.'
 
     return sentence
-
 
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
