@@ -128,8 +128,6 @@ def generate_sentence(input_words):
     if not has_verb and has_noun:
         if obj.lower() in verb_dict:
             verb = verb_dict[obj.lower()]
-        else:
-            raise HTTPException(status_code=400, detail="Error: Suitable verb not found for the noun.")
 
     # Final sentence formation, combining ordered words and other logic
     sentence = ordered_sentence  # Start with the ordered sentence
