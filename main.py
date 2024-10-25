@@ -72,6 +72,7 @@ verb_dict = {
     "eggnog": "eat",
     "sumo": "eat",
     "halo-halo": "eat",
+    "dino": "play",
     "dino toy": "play",
     "burger": "eat",
     "chicken": "eat",
