@@ -64,24 +64,20 @@ def arrange_words_by_order(doc):
     return ' '.join(ordered_sentence).strip()
 
 verb_dict = {
-    "hungry": "eat",
-    "thirsty": "drink",
-    "tired": "sleep",
-    "happy": "smile",
     "food": "eat",
     "water": "drink",
     "bed": "sleep",
     "pool": "swim",
-    "Ice Cream": "eat",
-    "Eggnog": "eat",
-    "Sumo": "eat",
-    "Halo-Halo": "eat",
-    "Dinosaur Toy": "play",
-    "Burger": "eat",
-    "Chicken": "eat",
-    "Rubiks Cube": "play",
-    "Pizza": "eat",
-    "Oreo": "eat",
+    "icecream": "eat",
+    "eggnog": "eat",
+    "sumo": "eat",
+    "halo-halo": "eat",
+    "dino toy": "play",
+    "burger": "eat",
+    "chicken": "eat",
+    "pizza": "eat",
+    "oreo": "eat",
+    "breadsticks": "eat",
 }
 
 def generate_sentence(input_words):
@@ -118,9 +114,6 @@ def generate_sentence(input_words):
         elif token.ent_type_:
             named_entities.append(token.text)
             has_noun = True
-
-    if not has_noun:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a noun.")
     
     # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
@@ -134,8 +127,6 @@ def generate_sentence(input_words):
     if not has_verb and has_noun:
         if obj.lower() in verb_dict:
             verb = verb_dict[obj.lower()]
-        elif adjective.lower() in verb_dict:
-            verb = verb_dict[adjective.lower()]
         else:
             raise HTTPException(status_code=400, detail="Error: Suitable verb not found for the noun.")
 
