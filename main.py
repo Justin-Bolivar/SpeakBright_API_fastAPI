@@ -142,6 +142,7 @@ def generate_sentence(input_words):
             sentence += f", {subject.capitalize()} want to {verb}"
         else:
             sentence = f"{subject.capitalize()} {verb}"
+            sentence = f"{subject.capitalize()} {obj}"
         if obj:
             sentence += f" {obj}"
 
