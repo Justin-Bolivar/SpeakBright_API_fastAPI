@@ -108,21 +108,15 @@ def generate_sentence(input_words):
     # Final sentence formation, combining ordered words and other logic
     sentence = ordered_sentence  # Start with the ordered sentence
     
-    # If the sentence has a subject and auxiliary verb with an adjective
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
     
-    if adjective and aux_verb and subject and object:
-        sentence = f"{subject.capitalize()} {aux_verb} {adjective} {subject.capitalize()} want to {obj}"
-
     # Add the verb and object
+    if verb and obj:
+            sentence += f", {subject.capitalize()} want to {verb} {obj}"
+
     if verb:
-        if sentence:
-            sentence += f", {subject.capitalize()} want to {verb}"
-        else:
-            sentence = f"{subject.capitalize()} {verb}"
-        if obj:
-            sentence += f" {obj}"
+        sentence += f", {subject.capitalize()} want to {verb}"
 
     # Ensure proper sentence ending
     sentence = sentence.strip()
