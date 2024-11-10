@@ -110,10 +110,11 @@ def generate_sentence(input_words):
     
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
-    elif verb and obj:
+
+    if verb and obj:
             sentence += f", {subject.capitalize()} want to {verb} {obj}"
     elif obj:
-            sentence += f", {subject.capitalize()} want to {obj}"
+            sentence += f", {subject.capitalize()} want {obj}"
     elif verb:
         sentence += f", {subject.capitalize()} want to {verb}"
 
