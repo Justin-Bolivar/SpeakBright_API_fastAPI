@@ -32,6 +32,7 @@ class TextOutput(BaseModel):
     pos_tags: list
     ner_tags: list
     dependency: list
+
 def arrange_words_by_order(doc):
     pronoun = None
     adjective = None
@@ -110,13 +111,20 @@ def generate_sentence(input_words):
     
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
+    elif not subject and not adjective and verb and obj:
+        sentence = f"{verb.capitalize()} {obj}"
+    elif not subject and not adjective and obj:
+        sentence = f"{verb.capitalize()} {obj}"
+    elif not subject and not adjective and verb:
+        sentence = f"{verb.capitalize()} {verb}"
 
-    if verb and obj:
+    if adjective and aux_verb and subject:
+        if verb and obj:
             sentence += f", {subject.capitalize()} want to {verb} {obj}"
-    elif obj:
+        elif obj:
             sentence += f", {subject.capitalize()} want {obj}"
-    elif verb:
-        sentence += f", {subject.capitalize()} want to {verb}"
+        elif verb:
+            sentence += f", {subject.capitalize()} want to {verb}"
 
     # Ensure proper sentence ending
     sentence = sentence.strip()
