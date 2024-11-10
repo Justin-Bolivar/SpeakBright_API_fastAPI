@@ -97,11 +97,6 @@ def generate_sentence(input_words):
             named_entities.append(token.text)
             has_noun = True
 
-    if not has_noun:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a noun.")
-    if not has_verb:
-        raise HTTPException(status_code=400, detail="Error: The sentence is missing a verb.")
-
     # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
         aux_verb = "am"
