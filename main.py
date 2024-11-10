@@ -112,6 +112,9 @@ def generate_sentence(input_words):
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
     
+    if object:
+        sentence = f"{subject.capitalize()} want to {obj}"
+
     # Add the verb and object
     if verb:
         if sentence:
@@ -146,5 +149,5 @@ def generate_sentence_endpoint(text_input: TextInput):
         "dependency": dependencies
     }
 
-#if __name__ == "__main__":
-   #uvicorn.run("main:app", host="192.168.1.21", port=5724)
+# if __name__ == "__main__":
+#    uvicorn.run("main:app", host="192.168.1.19", port=5724)
