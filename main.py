@@ -112,8 +112,8 @@ def generate_sentence(input_words):
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
     
-    if object:
-        sentence = f"{subject.capitalize()} want to {obj}"
+    if adjective and aux_verb and subject and object:
+        sentence = f"{subject.capitalize()} {aux_verb} {adjective} want to {obj}"
 
     # Add the verb and object
     if verb:
