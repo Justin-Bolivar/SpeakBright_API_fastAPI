@@ -33,6 +33,13 @@ class TextOutput(BaseModel):
     ner_tags: list
     dependency: list
 
+# Dictionary of words with their correct POS tags
+force_pos_tags = {
+    "bored": "ADJ",
+    "cake": "NOUN",
+    "eat": "VERB",
+}
+
 def arrange_words_by_order(doc):
     pronoun = None
     adjective = None
@@ -41,6 +48,9 @@ def arrange_words_by_order(doc):
 
     # Iterate over tokens and classify them based on their POS tags
     for token in doc:
+        if token.text in force_pos_tags:
+            token.pos_ = force_pos_tags[token.text]
+            
         if token.pos_ == "PRON" and pronoun is None:
             pronoun = token.text
         elif token.pos_ == "ADJ" and adjective is None:
