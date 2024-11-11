@@ -48,9 +48,6 @@ def arrange_words_by_order(doc):
 
     # Iterate over tokens and classify them based on their POS tags
     for token in doc:
-        if token.text in force_pos_tags:
-            token.pos_ = force_pos_tags[token.text]
-            
         if token.pos_ == "PRON" and pronoun is None:
             pronoun = token.text
         elif token.pos_ == "ADJ" and adjective is None:
@@ -76,6 +73,10 @@ def arrange_words_by_order(doc):
 def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
     doc = nlp(rough_sentence)
+
+    for token in doc:
+        if token.text in force_pos_tags:
+            token.pos_ = force_pos_tags[token.text]
 
     # Arrange words in "Pronoun + Adjective + Verb + Noun" order
     ordered_sentence = arrange_words_by_order(doc)
