@@ -19,6 +19,7 @@ app.add_middleware(
 
 try:
     nlp = spacy.load("en_core_web_sm")
+    nltk.download('averaged_perceptron_tagger_eng')
 except OSError:
     # If the model is not found, download it
     print("Downloading the 'en_core_web_sm' model...")
