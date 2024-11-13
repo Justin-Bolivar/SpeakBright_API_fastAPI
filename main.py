@@ -125,7 +125,11 @@ def generate_sentence(input_words):
     if adjective and aux_verb and subject:
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
     elif subject and not adjective and verb and obj:
-        sentence = f"{subject.capitalize()} want to {verb} {obj}"
+        if obj.endswith('s'):
+            sentence = f", {subject.capitalize()} want to {verb} {obj}"
+        else:
+            article = "an" if obj[0].lower() in "aeiou" else "a"
+            sentence = f", {subject.capitalize()} want to {verb} {article} {obj}"
     elif subject and not adjective and obj:
         if obj.endswith('s'):
             sentence = f", {subject.capitalize()} want {obj}"
