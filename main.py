@@ -72,10 +72,18 @@ def arrange_words_by_order(doc):
 
     return ' '.join(ordered_sentence).strip()
 
+def tag_individual_words(words):
+    return [nltk.pos_tag([word])[0] for word in words]
+
 def generate_sentence(input_words):
+    # Tag each word individually
+    tagged_words = tag_individual_words(input_words)
+    
+    # Create a rough sentence from the input words
     rough_sentence = ' '.join(input_words)
     doc = nlp(rough_sentence)
 
+    # Override POS tags with forced tags if necessary
     for token in doc:
         if token.text in force_pos_tags:
             token.pos_ = force_pos_tags[token.text]
