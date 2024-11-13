@@ -42,22 +42,34 @@ force_pos_tags = {
     "ballpen": "NOUN",
 }
 
-def arrange_words_by_order(doc):
+def get_independent_pos_tags(words):
+    tags = []
+    for word in words:
+        # Process each word independently
+        doc = nlp(word)
+        if doc[0].text in force_pos_tags:
+            pos = force_pos_tags[doc[0].text]  # Override with custom POS tag if available
+        else:
+            pos = doc[0].pos_
+        tags.append({"word": word, "pos": pos})
+    return tags
+
+def arrange_words_by_order(pos_tags):
     pronoun = None
     adjective = None
     verb = None
     noun = None
 
-    # Iterate over tokens and classify them based on their POS tags
-    for token in doc:
-        if token.pos_ == "PRON" and pronoun is None:
-            pronoun = token.text
-        elif token.pos_ == "ADJ" and adjective is None:
-            adjective = token.text
-        elif token.pos_ == "VERB" and verb is None:
-            verb = token.text
-        elif token.pos_ == "NOUN" and noun is None:
-            noun = token.text
+    # Iterate over POS tags and classify them based on their tags
+    for tag in pos_tags:
+        if tag["pos"] == "PRON" and pronoun is None:
+            pronoun = tag["word"]
+        elif tag["pos"] == "ADJ" and adjective is None:
+            adjective = tag["word"]
+        elif tag["pos"] == "VERB" and verb is None:
+            verb = tag["word"]
+        elif tag["pos"] == "NOUN" and noun is None:
+            noun = tag["word"]
 
     # Create a list of the words in the correct order
     ordered_sentence = []
@@ -73,18 +85,12 @@ def arrange_words_by_order(doc):
     return ' '.join(ordered_sentence).strip()
 
 def generate_sentence(input_words):
-    rough_sentence = ' '.join(input_words)
-    doc = nlp(rough_sentence)
-
-    # Override POS tags based on force_pos_tags dictionary
-    for token in doc:
-        if token.text in force_pos_tags:
-            token.pos_ = force_pos_tags[token.text]
+    pos_tags = get_independent_pos_tags(input_words)
 
     # Arrange words in "Pronoun + Adjective + Verb + Noun" order
-    ordered_sentence = arrange_words_by_order(doc)
-    
-    # Extract tokens from the doc for further processing
+    ordered_sentence = arrange_words_by_order(pos_tags)
+
+    # Process POS and dependencies to form the sentence based on provided logic
     subject = ""
     verb = ""
     obj = ""
@@ -95,22 +101,19 @@ def generate_sentence(input_words):
     has_noun = False
     has_verb = False
 
-    # Process POS and dependencies as in the original logic
-    for token in doc:
-        if token.pos_ == 'PRON':
-            subject = token.text
+    # Extract relevant components based on POS tags
+    for tag in pos_tags:
+        if tag["pos"] == 'PRON':
+            subject = tag["word"]
             has_noun = True
-        elif token.pos_ == 'VERB':
-            verb = token.text
+        elif tag["pos"] == 'VERB':
+            verb = tag["word"]
             has_verb = True
-        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN':
-            obj = token.text
-            has_noun = True 
-        elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod' or token.pos_ == 'ADJ':
-            adjective = token.text
-        elif token.ent_type_:
-            named_entities.append(token.text)
+        elif tag["pos"] == 'NOUN':
+            obj = tag["word"]
             has_noun = True
+        elif tag["pos"] == 'ADJ':
+            adjective = tag["word"]
 
     # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
@@ -128,11 +131,8 @@ def generate_sentence(input_words):
     elif subject and not adjective and verb and obj:
         sentence = f"{subject.capitalize()} want to {verb} {obj}"
     elif subject and not adjective and obj:
-        if obj.endswith('s'):
-            sentence = f"{subject.capitalize()} want {obj}"
-        else:
-            article = "an" if obj[0].lower() in "aeiou" else "a"
-            sentence = f"{subject.capitalize()} want {article} {obj}"
+        article = "an" if obj[0].lower() in "aeiou" else "a"
+        sentence = f"{subject.capitalize()} want {article} {obj}"
     elif subject and not adjective and verb:
         sentence = f"{subject.capitalize()} want to {verb}"
 
@@ -140,11 +140,8 @@ def generate_sentence(input_words):
         if verb and obj:
             sentence += f", {subject.capitalize()} want to {verb} {obj}"
         elif obj:
-            if obj.endswith('s'):
-                sentence += f", {subject.capitalize()} want {obj}"
-            else:
-                article = "an" if obj[0].lower() in "aeiou" else "a"
-                sentence += f", {subject.capitalize()} want {article} {obj}"
+            article = "an" if obj[0].lower() in "aeiou" else "a"
+            sentence += f", {subject.capitalize()} want {article} {obj}"
         elif verb:
             sentence += f", {subject.capitalize()} want to {verb}"
 
@@ -159,12 +156,10 @@ def generate_sentence(input_words):
 def generate_sentence_endpoint(text_input: TextInput):
     input_words = text_input.words
     generated_sentence = generate_sentence(input_words)
-    rough_sentence = ' '.join(input_words)
-    doc = nlp(rough_sentence)
-
-    pos_tags = [{"word": token.text, "pos": token.pos_} for token in doc]
-    ner_tags = [{"word": ent.text, "label": ent.label_} for ent in doc.ents]
-    dependencies = [{"word": token.text, "dependency": token.dep_, "head": token.head.text} for token in doc]
+    
+    pos_tags = get_independent_pos_tags(input_words)
+    ner_tags = [{"word": ent.text, "label": ent.label_} for ent in nlp(' '.join(input_words)).ents]
+    dependencies = [{"word": tag["word"], "pos": tag["pos"]} for tag in pos_tags]
 
     return {
         "sentence": generated_sentence,
