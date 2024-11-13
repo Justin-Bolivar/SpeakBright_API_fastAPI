@@ -142,7 +142,7 @@ def generate_sentence(input_words):
             if obj.endswith('s'):
                 sentence += f", {subject.capitalize()} want {obj}"
             else:
-                article += "an" if obj[0].lower() in "aeiou" else "a"
+                article = "an" if obj[0].lower() in "aeiou" else "a"
                 sentence += f", {subject.capitalize()} want {article} {obj}"
         elif verb:
             sentence += f", {subject.capitalize()} want to {verb}"
