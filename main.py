@@ -34,23 +34,23 @@ class TextOutput(BaseModel):
     dependency: list
 
 # Dictionary of words with their correct POS tags
-force_pos_tags = {
-    "bored": "ADJ",
-    "cake": "NOUN",
-    "eat": "VERB",
-    "keyboard": "NOUN",
-    "ballpen": "NOUN",
-}
+#force_pos_tags = {
+    #"bored": "ADJ",
+    #"cake": "NOUN",
+   # "eat": "VERB",
+  #  "keyboard": "NOUN",
+ #   "ballpen": "NOUN",
+#}
 
 def get_independent_pos_tags(words):
     tags = []
     for word in words:
         # Process each word independently
         doc = nlp(word)
-        if doc[0].text in force_pos_tags:
-            pos = force_pos_tags[doc[0].text]  # Override with custom POS tag if available
-        else:
-            pos = doc[0].pos_
+       # if doc[0].text in force_pos_tags:
+        #    pos = force_pos_tags[doc[0].text]  # Override with custom POS tag if available
+        #else:
+        pos = doc[0].pos_
         tags.append({"word": word, "pos": pos})
     return tags
 
