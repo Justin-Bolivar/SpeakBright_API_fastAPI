@@ -140,10 +140,10 @@ def generate_sentence(input_words):
             sentence += f", {subject.capitalize()} want to {verb} {obj}"
         elif obj:
             if obj.endswith('s'):
-                sentence = f", {subject.capitalize()} want {obj}"
+                sentence += f", {subject.capitalize()} want {obj}"
             else:
-                article = "an" if obj[0].lower() in "aeiou" else "a"
-                sentence = f", {subject.capitalize()} want {article} {obj}"
+                article += "an" if obj[0].lower() in "aeiou" else "a"
+                sentence += f", {subject.capitalize()} want {article} {obj}"
         elif verb:
             sentence += f", {subject.capitalize()} want to {verb}"
 
