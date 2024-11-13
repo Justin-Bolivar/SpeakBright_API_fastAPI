@@ -132,9 +132,13 @@ def generate_sentence(input_words):
         sentence = f"{subject.capitalize()} want to {verb} {obj}"
     elif subject and not adjective and obj:
         article = "an" if obj[0].lower() in "aeiou" else "a"
+        if len([tag for tag in pos_tags if tag["pos"] == 'NOUN']) > 1:
+            objects = [tag["word"] for tag in pos_tags if tag["pos"] == 'NOUN']
+            sentence = f"{subject.capitalize()} want {obj[0]} and {obj[1]}"
         sentence = f"{subject.capitalize()} want {article} {obj}"
     elif subject and not adjective and verb:
         sentence = f"{subject.capitalize()} want to {verb}"
+    
 
     if adjective and aux_verb and subject:
         if verb and obj:
