@@ -25,7 +25,7 @@ except OSError:
     nlp = spacy.load("en_core_web_sm")
 
 class TextInput(BaseModel):
-    text: str
+    words: list[str]
 
 class TextOutput(BaseModel):
     sentence: str
@@ -76,6 +76,7 @@ def generate_sentence(input_words):
     rough_sentence = ' '.join(input_words)
     doc = nlp(rough_sentence)
 
+    # Override POS tags based on force_pos_tags dictionary
     for token in doc:
         if token.text in force_pos_tags:
             token.pos_ = force_pos_tags[token.text]
@@ -102,7 +103,7 @@ def generate_sentence(input_words):
         elif token.pos_ == 'VERB':
             verb = token.text
             has_verb = True
-        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN' :
+        elif token.dep_ == 'dobj' or token.pos_ == 'NOUN' or token.pos_ == 'PROPN':
             obj = token.text
             has_noun = True 
         elif token.dep_ == 'advmod' or token.dep_ == 'acomp' or token.dep_ == 'amod' or token.pos_ == 'ADJ':
@@ -154,12 +155,12 @@ def generate_sentence(input_words):
 
     return sentence
 
-
 @app.post("/complete_sentence", response_model=TextOutput)
 def generate_sentence_endpoint(text_input: TextInput):
-    input_words = text_input.text.split()
+    input_words = text_input.words
     generated_sentence = generate_sentence(input_words)
-    doc = nlp(text_input.text)
+    rough_sentence = ' '.join(input_words)
+    doc = nlp(rough_sentence)
 
     pos_tags = [{"word": token.text, "pos": token.pos_} for token in doc]
     ner_tags = [{"word": ent.text, "label": ent.label_} for ent in doc.ents]
