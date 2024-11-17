@@ -40,6 +40,7 @@ force_pos_tags = {
     "eat": "VERB",
     "keyboard": "NOUN",
     "ballpen": "NOUN",
+    "study": "VERB",
 }
 
 def get_independent_pos_tags(words):
