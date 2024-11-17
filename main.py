@@ -58,7 +58,7 @@ def arrange_words_by_order(pos_tags):
     pronoun = None
     adjective = None
     verb = None
-    noun = None
+    nouns = []
 
     # Iterate over POS tags and classify them based on their tags
     for tag in pos_tags:
@@ -68,8 +68,8 @@ def arrange_words_by_order(pos_tags):
             adjective = tag["word"]
         elif tag["pos"] == "VERB" and verb is None:
             verb = tag["word"]
-        elif tag["pos"] == "NOUN" and noun is None:
-            noun = tag["word"]
+        elif tag["pos"] == "NOUN":
+            nouns.append(tag["word"])
 
     # Create a list of the words in the correct order
     ordered_sentence = []
@@ -79,39 +79,28 @@ def arrange_words_by_order(pos_tags):
         ordered_sentence.append(adjective)
     if verb:
         ordered_sentence.append(verb)
-    if noun:
-        ordered_sentence.append(noun)
+    ordered_sentence.extend(nouns)
 
-    return ' '.join(ordered_sentence).strip()
+    return ordered_sentence
 
 def generate_sentence(input_words):
     pos_tags = get_independent_pos_tags(input_words)
+    ordered_words = arrange_words_by_order(pos_tags)
 
-    # Arrange words in "Pronoun + Adjective + Verb + Noun" order
-    ordered_sentence = arrange_words_by_order(pos_tags)
-
-    # Process POS and dependencies to form the sentence based on provided logic
     subject = ""
     verb = ""
-    obj = ""
     adjective = ""
     aux_verb = ""
-    named_entities = []
-
-    has_noun = False
-    has_verb = False
+    nouns = []
 
     # Extract relevant components based on POS tags
     for tag in pos_tags:
         if tag["pos"] == 'PRON':
             subject = tag["word"]
-            has_noun = True
         elif tag["pos"] == 'VERB':
             verb = tag["word"]
-            has_verb = True
         elif tag["pos"] == 'NOUN':
-            obj = tag["word"]
-            has_noun = True
+            nouns.append(tag["word"])
         elif tag["pos"] == 'ADJ':
             adjective = tag["word"]
 
@@ -123,31 +112,33 @@ def generate_sentence(input_words):
     elif subject.lower() in ["you", "we", "they"]:
         aux_verb = "are"
 
-    # Final sentence formation, combining ordered words and other logic
-    sentence = ordered_sentence  # Start with the ordered sentence
+    # Sentence formation with multiple nouns
+    sentence = ""
     
     if adjective and aux_verb and subject:
+        # Handle case with adjective
         sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
-    elif subject and not adjective and verb and obj:
-        sentence = f"{subject.capitalize()} want to {verb} {obj}"
-    elif subject and not adjective and obj:
-        article = "an" if obj[0].lower() in "aeiou" else "a"
-        if len([tag for tag in pos_tags if tag["pos"] == 'NOUN']) > 1:
-            objects = [tag["word"] for tag in pos_tags if tag["pos"] == 'NOUN']
-            sentence = f"{subject.capitalize()} want {obj[0]} and {obj[1]}"
-        sentence = f"{subject.capitalize()} want {article} {obj}"
-    elif subject and not adjective and verb:
-        sentence = f"{subject.capitalize()} want to {verb}"
-    
-
-    if adjective and aux_verb and subject:
-        if verb and obj:
-            sentence += f", {subject.capitalize()} want to {verb} {obj}"
-        elif obj:
-            article = "an" if obj[0].lower() in "aeiou" else "a"
-            sentence += f", {subject.capitalize()} want {article} {obj}"
-        elif verb:
-            sentence += f", {subject.capitalize()} want to {verb}"
+        
+        if nouns:
+            # Add objects after adjective statement
+            if len(nouns) == 1:
+                article = "an" if nouns[0][0].lower() in "aeiou" else "a"
+                sentence += f", {subject.lower()} want {article} {nouns[0]}"
+            else:
+                # Join multiple nouns with "and"
+                sentence += f", {subject.lower()} want {' and '.join(nouns)}"
+    else:
+        # Handle case without adjective
+        if subject:
+            sentence = f"{subject.capitalize()} want"
+            if len(nouns) == 1:
+                article = "an" if nouns[0][0].lower() in "aeiou" else "a"
+                sentence += f" {article} {nouns[0]}"
+            elif len(nouns) > 1:
+                sentence += f" {' and '.join(nouns)}"
+            
+            if verb:
+                sentence = f"{subject.capitalize()} want to {verb} {' and '.join(nouns)}"
 
     # Ensure proper sentence ending
     sentence = sentence.strip()
