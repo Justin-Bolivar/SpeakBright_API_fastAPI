@@ -41,6 +41,7 @@ force_pos_tags = {
     "keyboard": "NOUN",
     "ballpen": "NOUN",
     "study": "VERB",
+    "shocked": "ADJ",
 }
 
 def get_independent_pos_tags(words):
@@ -100,7 +101,7 @@ def generate_sentence(input_words):
             subject = tag["word"]
         elif tag["pos"] == 'VERB':
             verb = tag["word"]
-        elif tag["pos"] == 'NOUN':
+        elif tag["pos"] == 'NOUN' or tag["pos"] == 'PROPN':
             nouns.append(tag["word"])
         elif tag["pos"] == 'ADJ':
             adjective = tag["word"]
