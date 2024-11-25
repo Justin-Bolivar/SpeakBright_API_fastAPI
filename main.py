@@ -42,6 +42,8 @@ force_pos_tags = {
     "ballpen": "NOUN",
     "study": "VERB",
     "shocked": "ADJ",
+    "Burgerking meal": "NOUN",
+    "Playhouse Things": "NOUN",
 }
 
 def get_independent_pos_tags(words):
@@ -70,7 +72,7 @@ def arrange_words_by_order(pos_tags):
             adjective = tag["word"]
         elif tag["pos"] == "VERB" and verb is None:
             verb = tag["word"]
-        elif tag["pos"] == "NOUN":
+        elif tag["pos"] == "NOUN" or tag["pos"] == "PROPN":
             nouns.append(tag["word"])
 
     # Create a list of the words in the correct order
@@ -129,6 +131,11 @@ def generate_sentence(input_words):
             else:
                 # Join multiple nouns with "and"
                 sentence += f", {subject.lower()} want {' and '.join(nouns)}"
+        
+        elif verb:
+            # Handle case with verb but no nouns
+            sentence += f" and want to {verb}"
+
     else:
         # Handle case without adjective
         if subject:
