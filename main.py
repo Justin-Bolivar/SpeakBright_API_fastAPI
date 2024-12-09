@@ -127,10 +127,10 @@ def generate_sentence(input_words):
             # Add objects after adjective statement
             if len(nouns) == 1:
                 article = "an" if nouns[0][0].lower() in "aeiou" else "a"
-                sentence += f", {subject.lower()} want {article} {nouns[0]}"
+                sentence += f", {subject.capitalize()} want {article} {nouns[0]}"
             else:
                 # Join multiple nouns with "and"
-                sentence += f", {subject.lower()} want {' and '.join(nouns)}"
+                sentence += f", {subject.capitalize()} want {' and '.join(nouns)}"
         
         elif verb:
             # Handle case with verb but no nouns
