@@ -93,7 +93,7 @@ def generate_sentence(input_words):
 
     subject = ""
     verb = ""
-    adjective = ""
+    adjective = []
     aux_verb = ""
     nouns = []
 
@@ -106,7 +106,7 @@ def generate_sentence(input_words):
         elif tag["pos"] == 'NOUN' or tag["pos"] == 'PROPN':
             nouns.append(tag["word"])
         elif tag["pos"] == 'ADJ':
-            adjective = tag["word"]
+            adjective.append(tag["word"])
 
     # Determine auxiliary verb based on the subject
     if subject.lower() == "i":
@@ -120,8 +120,11 @@ def generate_sentence(input_words):
     sentence = ""
     
     if adjective and aux_verb and subject:
-        # Handle case with adjective
-        sentence = f"{subject.capitalize()} {aux_verb} {adjective}"
+        # Handle case with one or two adjectives
+        if len(adjective) == 1:
+            sentence = f"{subject.capitalize()} {aux_verb} {adjective[0]}"
+        elif len(adjective) == 2:
+            sentence = f"{subject.capitalize()} {aux_verb} {adjective[0]} and {adjective[1]}"
         
         if nouns:
             # Add objects after adjective statement
